@@ -1,0 +1,181 @@
+d-i live-installer/net-image string http://192.168.1.1/ubuntu/install/filesystem.squashfs
+
+### Unattended Installation
+d-i auto-install/enable boolean true
+d-i debconf/priority select critical
+
+### Locale
+d-i debian-installer/locale string en_US
+# Keyboard selection.
+d-i console-setup/ask_detect boolean false
+d-i keyboard-configuration/xkb-keymap select de
+d-i keyboard-configuration/layoutcode string de
+d-i keyboard-configuration/variantcode string
+
+### Network Config
+#d-i netcfg/choose_interface select auto
+#d-i netcfg/choose_interface select enp0s3
+#d-i netcfg/get_ipaddress string 192.168.1.42
+#d-i netcfg/get_netmask string 255.255.255.0
+#d-i netcfg/get_gateway string 192.168.1.1
+#d-i netcfg/get_nameservers string 192.168.1.1
+#d-i netcfg/confirm_static boolean true
+d-i netcfg/hostname string carpc
+
+### Package Mirrors
+d-i mirror/country string manual
+d-i mirror/http/hostname string http://192.168.1.1
+d-i mirror/http/directory string /ubuntu
+d-i mirror/http/proxy string
+
+### User Accounts
+d-i passwd/root-login boolean false
+d-i passwd/user-fullname string AMPS Developer
+d-i passwd/username string amps
+d-i passwd/user-password password amps
+d-i passwd/user-password-again password amps
+# Set to true if you want to encrypt the first user's home directory.
+d-i user-setup/encrypt-home boolean false
+
+# Controls whether or not the hardware clock is set to UTC.
+d-i clock-setup/utc boolean true
+d-i time/zone string Europe/Berlin
+# Controls whether to use NTP to set the clock during the install
+d-i clock-setup/ntp boolean true
+# NTP server to use. The default is almost always fine here.
+#d-i clock-setup/ntp-server string ntp.example.com
+
+### Partitions
+# https://wiki.ubuntu.com/Enterprise/WorkstationAutoinstallPreseed
+# https://secopsmonkey.com/custom-partioning-using-preseed.html
+# https://gist.github.com/CalvinHartwell/f2d7f5dedbfee2d7d47c583539a10859
+### Partitioning
+d-i preseed/early_command string umount /media || true
+d-i partman-auto/method string lvm
+d-i partman-auto-lvm/guided_size string max
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-lvm/confirm boolean true
+d-i partman-lvm/confirm_nooverwrite boolean true
+d-i partman-auto-lvm/new_vg_name string main
+d-i partman-md/device_remove_md boolean true
+d-i partman-md/confirm boolean true
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+d-i partman-basicmethods/method_only boolean false
+
+### Partitioning
+d-i partman-auto/method string lvm
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-lvm/confirm boolean true
+d-i partman-lvm/confirm_nooverwrite boolean true
+
+### EFI
+d-i partman-efi/non_efi_system boolean true
+
+### Grub
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/with_other_os boolean true
+
+### Disk layout
+d-i partman-auto-lvm/new_vg_name string vg-root
+d-i partman-auto/expert_recipe string                         \
+      custom-lvm ::                                           \
+        269 269 269 ext4 $primary{ } $bootable{ }             \
+        mountpoint{ /boot }                                   \
+        method{ format }                                      \
+        format{ }                                             \
+        use_filesystem{ }                                     \
+        filesystem{ ext4 }                                    \
+        .                                                     \
+        2152 2152 100% linux-swap $lvmok{ }                   \
+        lv_name{ lv_swap }                             	      \
+        in_vg { vg-root }                                     \
+        method{ swap }                                        \
+        format{ }                                             \
+        .						      \
+        3608 1 3608 ext4 $lvmok{ }                            \
+        mountpoint{ / }                                       \
+        lv_name{ lv_root }                                    \
+        in_vg { vg-root }                                     \
+        method{ format }                                      \
+        format{ }                                             \
+        use_filesystem{ }                                     \
+        filesystem{ ext4 }                                    \
+        .                                                     \
+        1076 1 1076 ext4 $lvmok{ }                            \
+        mountpoint{ /tmp }                                    \
+        lv_name{ lv_tmp }                                     \
+        in_vg { vg-root }                              	      \
+        method{ format }                                      \
+        format{ }                                             \
+	options/nodev{ nodev }                                \
+	options/nosuid{ nosuid }                              \
+	options/noexec{ noexec }                              \
+        use_filesystem{ }                                     \
+        filesystem{ ext4 }                                    \
+        .                                                     \
+        2152 1 2152 ext4 $lvmok{ }                            \
+        mountpoint{ /var }                                    \
+        lv_name{ lv_var }                                     \
+        in_vg { vg-root }                              	      \
+        method{ format }                                      \
+        format{ }                                             \
+        use_filesystem{ }                                     \
+        filesystem{ ext4 }                                    \
+        .                                                     \
+
+# Write and configure LVM 
+d-i partman-lvm/confirm boolean true
+d-i partman-lvm/confirm_nooverwrite boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm_write_new_label boolean true
+d-i partman-auto-lvm/guided_size string max
+
+# Add custom repository
+d-i apt-setup/local0/repository string http://build1.aldc/ ubuntu main
+
+### Package selection
+d-i tasksel/first multiselect none
+d-i pkgsel/include string openssh-server python
+d-i pkgsel/upgrade select full-upgrade
+d-i pkgsel/update-policy select unattended-upgrades
+
+# Individual additional packages to install
+d-i pkgsel/include string openssh-server \
+    vim \
+    git \
+    tmux \
+    build-essential \
+    wget \
+    curl \
+    python \
+    apt-transport-https \
+    ca-certificates \
+    gnupg-agent \
+    software-properties-common
+
+# Post Install Steps
+#d-i preseed/late_command string in-target \
+#     apt-get remove docker
+#d-i preseed/late_command string \
+#     apt-get update
+#    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+#    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"; \
+#    apt-get install docker-ce docker-ce-cli containerd.io; \
+#    usermod -aG docker amps
+    
+### Shutdown machine
+d-i finish-install/reboot_in_progress note
+#d-i debian-installer/exit/poweroff boolean true
+
+# This command is run just as base-config is starting up.
+base-config base-config/early_command string echo hi mom
+
+# This command is run after base-config is done, just before the login:
+# prompt. This is a good way to install a set of packages you want, or to
+# tweak the configuration of the system.
+base-config base-config/late_command string \
+	echo "auto enp0s8 \n iface enp0s8 inet dhcp" >> /etc/network/interfaces; \
+	ifup enp0s8;
