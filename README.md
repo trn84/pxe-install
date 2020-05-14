@@ -181,6 +181,8 @@ This guide was made with the help of multiple website which all of which lacked 
 
 # Resources:
 
+https://www.tecmint.com/install-ubuntu-via-pxe-server-using-local-dvd-sources/
+
 https://linuxhint.com/pxe_boot_ubuntu_server/
 
 https://graspingtech.com/network-install-ubuntu-18-04/
