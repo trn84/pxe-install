@@ -34,6 +34,7 @@ d-i passwd/user-fullname string AMPS Developer
 d-i passwd/username string amps
 d-i passwd/user-password password amps
 d-i passwd/user-password-again password amps
+d-i user-setup/allow-password-weak boolean true
 # Set to true if you want to encrypt the first user's home directory.
 d-i user-setup/encrypt-home boolean false
 
